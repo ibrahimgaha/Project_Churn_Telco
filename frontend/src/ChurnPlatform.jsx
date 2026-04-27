@@ -5,6 +5,7 @@ import ResultsTab from "./components/ResultsTab";
 import PredictTab from "./components/PredictTab";
 import RunsTab from "./components/RunsTab";
 import VisualizeTab from "./components/VisualizeTab";
+import RFAnalysisTab from "./components/RFAnalysisTab";
 
 // ─── Demo Data ──────────────────────────────────────────────────────────────
 const DEMO_DATASET = [
@@ -25,6 +26,7 @@ export default function ChurnPlatform() {
     { id: "results", label: "📊 Performance", icon: "📊" },
     { id: "visualize", label: "🎨 Exploration", icon: "🎨" },
     { id: "predict", label: "🔮 Inference", icon: "🔮" },
+    { id: "rf_analysis", label: "🌲 RF Analysis", icon: "🌲" },
     { id: "runs", label: "📁 MLflow History", icon: "📁" },
   ];
 
@@ -107,6 +109,7 @@ export default function ChurnPlatform() {
           {tab === "results" && <ResultsTab results={trainResults} />}
           {tab === "visualize" && <VisualizeTab />}
           {tab === "predict" && <PredictTab />}
+          {tab === "rf_analysis" && <RFAnalysisTab />}
           {tab === "runs" && <RunsTab />}
         </div>
       </div>

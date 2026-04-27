@@ -124,3 +124,29 @@ class ModelInfo(BaseModel):
     metrics: Dict[str, float]
     timestamp: str
     is_latest: bool
+
+
+# ─── RF Analysis (Task 4) ──────────────────────────────────────────────────
+
+class RFStabilityItem(BaseModel):
+    random_state: int
+    accuracy: float
+    precision: float
+    recall: float
+    f1_score: float
+
+class RFBiasVarianceItem(BaseModel):
+    n_estimators: int
+    max_depth: Optional[int]
+    train_accuracy: float
+    test_accuracy: float
+    bias: float
+    variance: float
+
+
+class RFAnalysisResponse(BaseModel):
+    feature_importance: Dict[str, float]
+    top_3_explanation: List[str]
+    stability_analysis: List[RFStabilityItem]
+    bias_variance_study: List[RFBiasVarianceItem]
+    dt_vs_rf: Dict[str, Any]

@@ -6,7 +6,7 @@ Entry point. Registers all routers and configures CORS.
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import train, predict, models, results, tune, visualize
+from routers import train, predict, models, results, tune, visualize, rf_analysis
 import subprocess
 import socket
 import os
@@ -32,6 +32,7 @@ app.include_router(models.router,     prefix="/models",     tags=["Models"])
 app.include_router(results.router,    prefix="/results",    tags=["Results"])
 app.include_router(tune.router,       prefix="/tune",       tags=["Tuning"])
 app.include_router(visualize.router,  prefix="/visualize",  tags=["Visualization"])
+app.include_router(rf_analysis.router, prefix="/rf-analysis", tags=["RF Analysis Task 4"])
 
 
 @app.get("/")

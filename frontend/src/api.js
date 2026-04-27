@@ -50,6 +50,9 @@ export const fetchPCA = () => api("/visualize/pca");
 export const fetchTSNE = (perplexity = 30) =>
   api(`/visualize/tsne?perplexity=${perplexity}`);
 
+/** Fetch Random Forest Interpretation Analysis (Task 4) */
+export const fetchRFAnalysis = () => api("/rf-analysis");
+
 /** Launch the MLflow UI background process */
 export const launchMLflowUI = () =>
   api("/mlflow/launch", { method: "POST" });
