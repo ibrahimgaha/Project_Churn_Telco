@@ -56,3 +56,15 @@ export const fetchRFAnalysis = () => api("/rf-analysis");
 /** Launch the MLflow UI background process */
 export const launchMLflowUI = () =>
   api("/mlflow/launch", { method: "POST" });
+
+/** Promote the best model to Production via MLflow Registry */
+export const promoteModel = () =>
+  api("/registry/promote", { method: "POST" });
+
+/** Fetch all registered model versions */
+export const fetchRegistryStatus = () => api("/registry/status");
+
+/** Run evidently and KS data drift analysis */
+export const runDriftAnalysis = () =>
+  api("/drift/run", { method: "POST" });
+

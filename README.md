@@ -5,7 +5,7 @@ This project has been transformed into a professional **ML Experimentation Platf
 ---
 
 ## 🚀 Key Features Added
-- **5 Classification Algorithms**: Support for Logistic Regression, KNN, SVM, Decision Tree, and Random Forest.
+- **7 Classification Algorithms**: Support for Logistic Regression, KNN, SVM, Decision Tree, Random Forest, **AdaBoost**, and **XGBoost**.
 - **Automated Hyperparameter Tuning**: Integrated `GridSearchCV` to find optimal model parameters automatically.
 - **MLflow Tracking**: Every training run logs parameters, metrics (Accuracy, F1, Recall, etc.), and the model artifact.
 - **Best Model Auto-Identification**: The system identifies the best-performing model based on F1-score.
@@ -60,15 +60,15 @@ Open `http://localhost:5000` in your browser.
 2. **Performance Tab**: Compare models side-by-side using Accuracy, Precision, Recall, F1-score, and ROC-AUC.
 3. **Exploration Tab**: Run PCA or t-SNE to see a 2D map of your customer segments.
 4. **Inference Tab**: Upload a CSV file and a **Run ID** from the history to generate churn predictions for new customers.
-5. **Run History**: View all past experiments and copy Run IDs for prediction.
+5. **Ensemble Battle**: A dedicated comparison page for Random Forest, AdaBoost, and XGBoost with architectural schemas.
+6. **Run History**: View all past experiments and copy Run IDs for prediction.
 
 ---
 
 ## 🧠 Simple Explanation for Students
 
 ### 🏆 Which Model is Best?
-In our testing, **Random Forest** often performs best because it combines multiple decision trees to reduce error and handle non-linear relationships. 
-
+In our testing, **Random Forest** and **XGBoost** often perform best. XGBoost is typically the most accurate but requires careful tuning of learning rates and depths. Random Forest is the most robust "out of the box".
 For churn prediction, we prioritize the **F1-Score** or **Recall** over simple Accuracy. 
 *Why?* Because a customer "No Churn" prediction for someone who actually churns (False Negative) is very expensive for a company.
 

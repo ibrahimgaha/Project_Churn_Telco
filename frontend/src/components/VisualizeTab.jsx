@@ -6,53 +6,84 @@ import { fetchPCA, fetchTSNE } from "../api";
 // ─── Scatter plot (SVG) ────────────────────────────────────────────────────
 function Scatter({ points, title }) {
   if (!points || !points.length) return null;
-  const W = 520, H = 380, pad = 40;
+  const W = 520, H = 400, pad = 48;
   const xs = points.map(p => p.x), ys = points.map(p => p.y);
   const xMin = Math.min(...xs), xMax = Math.max(...xs);
   const yMin = Math.min(...ys), yMax = Math.max(...ys);
   const xR = xMax - xMin || 1, yR = yMax - yMin || 1;
   const fw = W - pad * 2, fh = H - pad * 2;
 
-  // Sample up to 800 points for performance
-  const sampled = points.length > 800
-    ? points.filter((_, i) => i % Math.ceil(points.length / 800) === 0)
+  // Sample points for performance
+  const sampled = points.length > 1000
+    ? points.filter((_, i) => i % Math.ceil(points.length / 1000) === 0)
     : points;
 
   return (
-    <div>
-      <div style={{ fontSize: 13, fontWeight: 700, color: "#94a3b8", marginBottom: 8, textTransform: "uppercase", letterSpacing: 2 }}>{title}</div>
-      <svg width={W} height={H} style={{ background: "#0f172a", borderRadius: 8, border: "1px solid #1e293b" }}>
-        {/* Axes */}
-        <line x1={pad} y1={pad} x2={pad} y2={pad + fh} stroke="#334155" />
-        <line x1={pad} y1={pad + fh} x2={pad + fw} y2={pad + fh} stroke="#334155" />
-        <text x={pad + fw / 2} y={H - 8} fill="#475569" fontSize={10} textAnchor="middle">Component 1</text>
-        <text x={12} y={pad + fh / 2} fill="#475569" fontSize={10} textAnchor="middle" transform={`rotate(-90,12,${pad + fh / 2})`}>Component 2</text>
-        {/* Points */}
-        {sampled.map((p, i) => (
-          <circle
-            key={i}
-            cx={pad + ((p.x - xMin) / xR) * fw}
-            cy={pad + fh - ((p.y - yMin) / yR) * fh}
-            r={2.5}
-            fill={p.label === 1 ? "#fca5a5" : "#6ee7b7"}
-            opacity={0.6}
-          />
-        ))}
-        {/* Legend */}
-        <circle cx={W - 100} cy={16} r={5} fill="#fca5a5" />
-        <text x={W - 90} y={20} fill="#94a3b8" fontSize={10}>Churn</text>
-        <circle cx={W - 45} cy={16} r={5} fill="#6ee7b7" />
-        <text x={W - 35} y={20} fill="#94a3b8" fontSize={10}>Retain</text>
-      </svg>
+    <div className="stagger">
+      <div style={{ fontSize: 11, fontWeight: 800, color: "#6366f1", marginBottom: 16, textTransform: "uppercase", letterSpacing: 1.5, display: "flex", alignItems: "center", gap: 8 }}>
+         <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#6366f1" }} />
+         {title}
+      </div>
+      <div style={{ 
+        background: "rgba(15, 23, 42, 0.4)", 
+        borderRadius: 24, 
+        border: "1px solid rgba(255, 255, 255, 0.05)",
+        padding: 24,
+        boxShadow: "inset 0 0 20px rgba(0,0,0,0.2)"
+      }}>
+        <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <radialGradient id="churnGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#f43f5e" stopOpacity="0.1" />
+            </radialGradient>
+            <radialGradient id="retainGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0.1" />
+            </radialGradient>
+          </defs>
+          
+          {/* Grid Lines */}
+          {[0, 0.25, 0.5, 0.75, 1].map(p => (
+            <React.Fragment key={p}>
+              <line x1={pad} y1={pad + p * fh} x2={W - pad} y2={pad + p * fh} stroke="rgba(255,255,255,0.03)" />
+              <line x1={pad + p * fw} y1={pad} x2={pad + p * fw} y2={H - pad} stroke="rgba(255,255,255,0.03)" />
+            </React.Fragment>
+          ))}
+
+          {/* Points */}
+          {sampled.map((p, i) => (
+            <circle
+              key={i}
+              cx={pad + ((p.x - xMin) / xR) * fw}
+              cy={pad + fh - ((p.y - yMin) / yR) * fh}
+              r={3}
+              fill={p.label === 1 ? "#f43f5e" : "#10b981"}
+              style={{ mixBlendMode: "screen" }}
+              opacity={0.7}
+            />
+          ))}
+
+          {/* Legend Overlay */}
+          <g transform={`translate(${W - 120}, 20)`}>
+             <rect width={100} height={50} rx={12} fill="rgba(3,7,18,0.8)" />
+             <circle cx={20} cy={16} r={4} fill="#f43f5e" />
+             <text x={35} y={20} fill="#94a3b8" fontSize={10} fontWeight={700}>CHURN</text>
+             <circle cx={20} cy={34} r={4} fill="#10b981" />
+             <text x={35} y={38} fill="#94a3b8" fontSize={10} fontWeight={700}>RETAIN</text>
+          </g>
+        </svg>
+      </div>
     </div>
   );
 }
 
 // ─── Visualize Tab ─────────────────────────────────────────────────────────
+import React from "react";
 export default function VisualizeTab() {
   const [pcaData, setPcaData] = useState(null);
   const [tsneData, setTsneData] = useState(null);
-  const [loading, setLoading] = useState(null); // "pca" | "tsne" | null
+  const [loading, setLoading] = useState(null);
   const [error, setError] = useState(null);
 
   const handlePCA = async () => {
@@ -70,35 +101,66 @@ export default function VisualizeTab() {
   };
 
   return (
-    <div style={S.section}>
-      <div style={S.sectionTitle}>Dimensionality Reduction — Data Exploration</div>
-      <p style={{ fontSize: 12, color: "#64748b", marginBottom: 16, lineHeight: 1.7 }}>
-        Reduce high-dimensional features to 2D to visualise how separable the Churn vs. Retain groups are.
-        <strong style={{ color: "#94a3b8" }}> PCA</strong> is fast & linear.
-        <strong style={{ color: "#94a3b8" }}> t-SNE</strong> is slower but captures non-linear structure.
-      </p>
-
-      {error && <div style={S.errorBox}>⚠ {error}</div>}
-
-      <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
-        <button onClick={handlePCA} disabled={loading === "pca"} style={{ ...S.btn, background: "#38bdf8" }}>
-          {loading === "pca" ? "⏳ Computing PCA..." : "📐 Run PCA"}
-        </button>
-        <button onClick={handleTSNE} disabled={loading === "tsne"} style={{ ...S.btn, background: "#c4b5fd", color: "#0f172a" }}>
-          {loading === "tsne" ? "⏳ Computing t-SNE..." : "🔬 Run t-SNE"}
-        </button>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: pcaData && tsneData ? "1fr 1fr" : "1fr", gap: 24 }}>
-        {pcaData && <Scatter points={pcaData} title="PCA Projection" />}
-        {tsneData && <Scatter points={tsneData} title="t-SNE Projection" />}
-      </div>
-
-      {!pcaData && !tsneData && (
-        <div style={{ color: "#475569", textAlign: "center", padding: 40 }}>
-          Click a button above to generate a visualization.
+    <div className="stagger">
+      <div style={S.section} className="glass-card">
+        <div style={S.sectionTitle}>
+           <span style={{ color: "#6366f1" }}>🎨</span> Feature Topology
         </div>
-      )}
+        <p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 32, lineHeight: 1.6, maxWidth: 800 }}>
+          Deconstruct high-dimensional customer vectors into 2D manifolds to inspect feature separation.
+          <br/><span style={{ color: "#64748b" }}>Linear (PCA) and Non-linear (t-SNE) projections provide diverse structural insights.</span>
+        </p>
+
+        {error && <div style={S.errorBox}><span>⚠️</span> {error}</div>}
+
+        <div style={{ display: "flex", gap: 16, marginBottom: 40 }}>
+          <button 
+            onClick={handlePCA} 
+            disabled={loading === "pca"} 
+            style={{ 
+              ...S.btn, 
+              background: "rgba(56, 189, 248, 0.1)", 
+              color: "#38bdf8", 
+              border: "1px solid rgba(56, 189, 248, 0.3)",
+              boxShadow: "none"
+            }}
+          >
+            {loading === "pca" ? "📐 Computing PCA..." : "📐 Launch PCA Analysis"}
+          </button>
+          <button 
+            onClick={handleTSNE} 
+            disabled={loading === "tsne"} 
+            style={{ 
+              ...S.btn, 
+              background: "rgba(167, 139, 250, 0.1)", 
+              color: "#a78bfa", 
+              border: "1px solid rgba(167, 139, 250, 0.3)",
+              boxShadow: "none"
+            }}
+          >
+            {loading === "tsne" ? "🔬 Computing t-SNE..." : "🔬 Launch t-SNE Analysis"}
+          </button>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: pcaData && tsneData ? "1fr 1fr" : "1fr", gap: 40 }}>
+          {pcaData && <Scatter points={pcaData} title="Principle Component Analysis (PCA)" />}
+          {tsneData && <Scatter points={tsneData} title="t-Distributed Stochastic Neighbor Embedding (t-SNE)" />}
+        </div>
+
+        {!pcaData && !tsneData && (
+          <div style={{ 
+            color: "#475569", 
+            textAlign: "center", 
+            padding: "100px 40px", 
+            border: "1px dashed rgba(255,255,255,0.05)",
+            borderRadius: 24,
+            background: "rgba(255,255,255,0.01)"
+          }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>📡</div>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Select a projection algorithm to map the customer manifold.</div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

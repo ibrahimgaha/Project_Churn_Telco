@@ -6,28 +6,33 @@ import PredictTab from "./components/PredictTab";
 import RunsTab from "./components/RunsTab";
 import VisualizeTab from "./components/VisualizeTab";
 import RFAnalysisTab from "./components/RFAnalysisTab";
+import EnsembleComparisonTab from "./components/EnsembleComparisonTab";
+import RegistryTab from "./components/RegistryTab";
+import DriftTab from "./components/DriftTab";
+
 
 // ─── Demo Data ──────────────────────────────────────────────────────────────
 const DEMO_DATASET = [
-  { customerID: "1001", tenure: 12, MonthlyCharges: 65.4, TotalCharges: 784.8, Contract: "Month-to-month", InternetService: "Fiber optic", Churn: "Yes" },
-  { customerID: "1002", tenure: 48, MonthlyCharges: 45.2, TotalCharges: 2169.6, Contract: "Two year", InternetService: "DSL", Churn: "No" },
-  { customerID: "1003", tenure: 3, MonthlyCharges: 89.1, TotalCharges: 267.3, Contract: "Month-to-month", InternetService: "Fiber optic", Churn: "Yes" },
-  { customerID: "1004", tenure: 72, MonthlyCharges: 20.0, TotalCharges: 1440.0, Contract: "Two year", InternetService: "No", Churn: "No" },
-  { customerID: "1005", tenure: 7, MonthlyCharges: 77.5, TotalCharges: 542.5, Contract: "Month-to-month", InternetService: "Fiber optic", Churn: "Yes" },
+  { id: "1001", tenure: 12, monthly: 65.4, total: 784.8, contract: "M2M", internet: "Fiber", churn: "Yes" },
+  { id: "1002", tenure: 48, monthly: 45.2, total: 2169.6, contract: "2YR", internet: "DSL", churn: "No" },
+  { id: "1003", tenure: 3, monthly: 89.1, total: 267.3, contract: "M2M", internet: "Fiber", churn: "Yes" },
+  { id: "1004", tenure: 72, monthly: 20.0, total: 1440.0, contract: "2YR", internet: "No", churn: "No" },
 ];
 
-// ─── Main App ────────────────────────────────────────────────────────────────
 export default function ChurnPlatform() {
   const [tab, setTab] = useState("train");
   const [trainResults, setTrainResults] = useState([]);
 
   const tabs = [
-    { id: "train", label: "⚗ Training", icon: "⚗" },
-    { id: "results", label: "📊 Performance", icon: "📊" },
-    { id: "visualize", label: "🎨 Exploration", icon: "🎨" },
-    { id: "predict", label: "🔮 Inference", icon: "🔮" },
-    { id: "rf_analysis", label: "🌲 RF Analysis", icon: "🌲" },
-    { id: "runs", label: "📁 MLflow History", icon: "📁" },
+    { id: "train", label: "Training", icon: "⚗️" },
+    { id: "results", label: "Insights", icon: "📊" },
+    { id: "visualize", label: "Explore", icon: "🎨" },
+    { id: "predict", label: "Predict", icon: "🔮" },
+    { id: "rf_analysis", label: "RF Deep Dive", icon: "🌲" },
+    { id: "ensemble_comp", label: "Ensemble Battle", icon: "⚔️" },
+    { id: "registry", label: "Model Registry", icon: "🏆" },
+    { id: "drift", label: "Data Drift", icon: "📈" },
+    { id: "runs", label: "MLflow UI", icon: "📁" },
   ];
 
   const onTrainSuccess = (results) => {
@@ -36,70 +41,111 @@ export default function ChurnPlatform() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#030712", color: "#e2e8f0", fontFamily: "'Inter', sans-serif" }}>
-      {/* Premium Header */}
-      <div style={{ background: "#0a1628", borderBottom: "1px solid #1e293b", padding: "16px 32px", display: "flex", alignItems: "center", gap: 16, sticky: "top", zIndex: 10 }}>
-        <div style={{ fontSize: 20, fontWeight: 900, color: "#6ee7b7", letterSpacing: -1, textShadow: "0 0 10px rgba(110, 231, 183, 0.3)" }}>◈ CHURN.ML</div>
-        <div style={{ background: "#6ee7b71a", color: "#6ee7b7", border: "1px solid #6ee7b744", borderRadius: 4, padding: "2px 8px", fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>EXPERIMENTATION v2.0</div>
-        <div style={{ flex: 1 }} />
-        <div style={{ display: "none", md: "block", fontSize: 11, color: "#475569", fontWeight: 500 }}>
-          LR · KNN · SVM · DT · RANDOM FOREST
+    <div style={{ minHeight: "100vh", paddingBottom: 100 }}>
+      {/* Navigation Header */}
+      <nav style={{ 
+        background: "rgba(3, 7, 18, 0.8)", 
+        backdropFilter: "blur(20px)", 
+        borderBottom: "1px solid rgba(255, 255, 255, 0.05)", 
+        padding: "0 40px", 
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "space-between",
+        height: 80,
+        position: "sticky",
+        top: 0,
+        zIndex: 1000
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ 
+            width: 32, height: 32, 
+            background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)", 
+            borderRadius: 10,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontWeight: 900, color: "#fff", fontSize: 18,
+            boxShadow: "0 0 20px rgba(99, 102, 241, 0.4)"
+          }}>C</div>
+          <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.5, color: "#fff" }}>
+            CHURN.<span style={{ color: "#6366f1" }}>AI</span>
+          </div>
+          <div style={{ 
+            background: "rgba(99, 102, 241, 0.1)", 
+            color: "#818cf8", 
+            padding: "4px 10px", 
+            borderRadius: 8, 
+            fontSize: 10, 
+            fontWeight: 800, 
+            letterSpacing: 1,
+            border: "1px solid rgba(99, 102, 241, 0.2)",
+            marginLeft: 8
+          }}>v2.5 PRO</div>
         </div>
-      </div>
 
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "28px 24px" }}>
-        {/* Navigation Bar */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 28, borderBottom: "1px solid #1e293b", paddingBottom: 0 }}>
+        <div style={{ display: "flex", gap: 8 }}>
           {tabs.map(t => (
             <button 
               key={t.id} 
               onClick={() => setTab(t.id)}
               style={{ 
-                background: tab === t.id ? "#6ee7b710" : "transparent", 
-                color: tab === t.id ? "#6ee7b7" : "#64748b", 
+                background: tab === t.id ? "rgba(99, 102, 241, 0.1)" : "transparent", 
+                color: tab === t.id ? "#fff" : "#64748b", 
                 border: "none",
-                borderBottom: `2px solid ${tab === t.id ? "#6ee7b7" : "transparent"}`,
-                padding: "12px 24px", 
+                borderRadius: 12,
+                padding: "10px 18px", 
                 fontSize: 13, 
-                fontWeight: tab === t.id ? 800 : 600, 
+                fontWeight: tab === t.id ? 700 : 500, 
                 cursor: "pointer", 
-                transition: "all 0.2s",
+                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                 display: "flex",
                 alignItems: "center",
-                gap: 8
+                gap: 8,
+                border: `1px solid ${tab === t.id ? "rgba(99, 102, 241, 0.2)" : "transparent"}`
+              }}
+              onMouseEnter={(e) => {
+                if (tab !== t.id) e.currentTarget.style.color = "#a5b4fc";
+              }}
+              onMouseLeave={(e) => {
+                if (tab !== t.id) e.currentTarget.style.color = "#64748b";
               }}
             >
+              <span>{t.icon}</span>
               <span>{t.label}</span>
             </button>
           ))}
         </div>
 
-        {/* Content Area */}
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+           <div style={{ width: 1, height: 24, background: "rgba(255,255,255,0.05)" }} />
+           <div style={{ fontSize: 11, color: "#475569", fontWeight: 600, letterSpacing: 0.5 }}>
+              EN7 · SOTA · 2026
+           </div>
+        </div>
+      </nav>
+
+      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px" }}>
         <div className="stagger">
           {tab === "train" && (
             <>
-              {/* Dataset Preview Card */}
-              <div style={S.section} className="fade-in">
-                <div style={S.sectionTitle}>Dataset Preview — Telco Churn Data</div>
-                <div style={{ overflowX: "auto", borderRadius: 8, border: "1px solid #1e293b" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                    <thead style={{ background: "#0f172a" }}>
-                      <tr>{Object.keys(DEMO_DATASET[0]).map(k => <th key={k} style={{ padding: "10px 14px", color: "#64748b", textAlign: "left", textTransform: "uppercase", letterSpacing: 1, fontSize: 10 }}>{k}</th>)}</tr>
-                    </thead>
-                    <tbody>
-                      {DEMO_DATASET.map((row, i) => (
-                        <tr key={i} style={{ borderBottom: "1px solid #0f172a" }}>
-                          {Object.values(row).map((v, j) => (
-                            <td key={j} style={{ padding: "10px 14px", color: j === 6 ? (v === "Yes" ? "#fca5a5" : "#6ee7b7") : "#cbd5e1", fontWeight: j === 6 ? 700 : 400 }}>{v}</td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              {/* Dataset Quick Glance */}
+              <div style={S.section} className="glass-card">
+                <div style={S.sectionTitle}>
+                  <span style={{ fontSize: 16 }}>📁</span> Dataset Intelligence
                 </div>
-                <p style={{ marginTop: 12, fontSize: 11, color: "#475569" }}>
-                  Displaying small sample. Full dataset contains 7,043 customer records used for training.
-                </p>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
+                  {DEMO_DATASET.map((row, i) => (
+                    <div key={i} style={{ background: "rgba(15, 23, 42, 0.3)", padding: 16, borderRadius: 16, border: "1px solid rgba(255,255,255,0.03)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                         <span style={{ fontSize: 10, color: "#475569", fontWeight: 700 }}>ID: {row.id}</span>
+                         <span style={{ fontSize: 10, color: row.churn === "Yes" ? "#fca5a5" : "#10b981", fontWeight: 900 }}>{row.churn.toUpperCase()}</span>
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{row.tenure} Months</div>
+                      <div style={{ fontSize: 11, color: "#64748b" }}>${row.monthly}/mo · {row.contract}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: 20, fontSize: 11, color: "#475569", textAlign: "center", fontStyle: "italic" }}>
+                   Showing active memory samples. 7,043 total records indexed.
+                </div>
               </div>
 
               <TrainTab onTrainSuccess={onTrainSuccess} />
@@ -110,36 +156,40 @@ export default function ChurnPlatform() {
           {tab === "visualize" && <VisualizeTab />}
           {tab === "predict" && <PredictTab />}
           {tab === "rf_analysis" && <RFAnalysisTab />}
+          {tab === "ensemble_comp" && <EnsembleComparisonTab />}
+          {tab === "registry" && <RegistryTab />}
+          {tab === "drift" && <DriftTab />}
           {tab === "runs" && <RunsTab />}
         </div>
-      </div>
+      </main>
 
-      {/* Modern Footer System Architecture */}
-      <div style={{ maxWidth: 1200, margin: "40px auto 100px auto", padding: "0 24px" }}>
-        <div style={{ background: "#0a1628", border: "1px solid #1e293b", borderRadius: 12, padding: 24 }}>
-          <div style={S.sectionTitle}>Platform Architecture (MLOps Stack)</div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", flexWrap: "wrap", padding: "16px 0" }}>
+      {/* Modern Architecture Footer */}
+      <footer style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
+        <div style={{ ...S.section, textAlign: "center", padding: "40px" }} className="glass-card">
+          <div style={{ ...S.sectionTitle, justifyContent: "center" }}>Platform MLOps Architecture</div>
+          <div style={{ display: "flex", gap: 12, alignItems: "center", justifyContent: "center", flexWrap: "wrap", marginTop: 20 }}>
             {[
-              ["FastAPI", "#a5b4fc", "REST API Backend"],
-              ["→"],
-              ["MLflow", "#f9a8d4", "Experiment Tracking"],
-              ["→"],
-              ["scikit-learn", "#fcd34d", "5 Classification Models"],
-              ["→"],
-              ["GridSearchCV", "#6ee7b7", "Auto Hyperparameter Tuning"],
-              ["→"],
-              ["React + Vite", "#38bdf8", "Premium Frontend UI"],
-            ].map((item, i) => item.length === 1 ? (
-              <span key={i} style={{ color: "#1e293b", fontSize: 24, fontWeight: 300 }}>→</span>
-            ) : (
-              <div key={i} style={{ background: item[1] + "10", border: `1px solid ${item[1]}30`, borderRadius: 10, padding: "12px 18px", textAlign: "center", minWidth: 140 }}>
-                <div style={{ color: item[1], fontWeight: 800, fontSize: 12, marginBottom: 4 }}>{item[0]}</div>
-                <div style={{ color: "#475569", fontSize: 10 }}>{item[2]}</div>
+              ["FastAPI", "#a5b4fc"],
+              ["MLflow", "#f9a8d4"],
+              ["XGBoost", "#f43f5e"],
+              ["Scikit-learn", "#fcd34d"],
+              ["React 18", "#6366f1"],
+              ["Vite", "#38bdf8"],
+            ].map(([name, color], i) => (
+              <div key={i} style={{ 
+                background: `${color}10`, 
+                border: `1px solid ${color}33`, 
+                borderRadius: 14, 
+                padding: "10px 20px",
+                display: "flex", alignItems: "center", gap: 8
+              }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: color, boxShadow: `0 0 10px ${color}` }} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9" }}>{name}</span>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }

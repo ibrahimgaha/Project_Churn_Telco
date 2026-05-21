@@ -52,12 +52,35 @@ class RandomForestParams(BaseModel):
     criterion: str = Field("gini", description="'gini' or 'entropy'")
 
 
+class AdaBoostParams(BaseModel):
+    """
+    AdaBoost: Adaptive Boosting. Combines many weak learners (decision stumps)
+    into a strong classifier by re-weighting misclassified samples each round.
+    """
+    n_estimators: int = Field(50, ge=10, le=500, description="Number of weak learners")
+    learning_rate: float = Field(1.0, gt=0, le=2.0, description="Shrinkage: lower = slower but more robust")
+    algorithm: str = Field("SAMME", description="Boosting algorithm")
+
+
+class XGBoostParams(BaseModel):
+    """
+    XGBoost: Extreme Gradient Boosting. Uses regularized gradient boosting
+    with second-order Taylor expansion for faster, more accurate trees.
+    subsample and colsample_bytree act like dropout for trees.
+    """
+    n_estimators: int = Field(100, ge=10, le=1000, description="Number of boosting rounds")
+    learning_rate: float = Field(0.1, gt=0, le=1.0, description="Step size shrinkage")
+    max_depth: int = Field(6, ge=1, le=20, description="Maximum tree depth")
+    subsample: float = Field(0.8, gt=0, le=1.0, description="Row sampling ratio")
+    colsample_bytree: float = Field(0.8, gt=0, le=1.0, description="Column sampling ratio per tree")
+
+
 # ─── Training request ────────────────────────────────────────────────────────
 
 class TrainRequest(BaseModel):
     models: List[str] = Field(
         ...,
-        description="List of model keys: 'logistic_regression', 'decision_tree', 'svm', 'knn', 'random_forest'"
+        description="List of model keys: 'logistic_regression', 'decision_tree', 'svm', 'knn', 'random_forest', 'adaboost', 'xgboost'"
     )
     features: Optional[List[str]] = Field(
         None,
@@ -144,9 +167,17 @@ class RFBiasVarianceItem(BaseModel):
     variance: float
 
 
+class RFErrorItem(BaseModel):
+    index: int
+    actual: int
+    predicted: int
+    features: Dict[str, Any]
+    explanation: str
+
 class RFAnalysisResponse(BaseModel):
     feature_importance: Dict[str, float]
     top_3_explanation: List[str]
     stability_analysis: List[RFStabilityItem]
     bias_variance_study: List[RFBiasVarianceItem]
+    error_analysis: List[RFErrorItem]
     dt_vs_rf: Dict[str, Any]

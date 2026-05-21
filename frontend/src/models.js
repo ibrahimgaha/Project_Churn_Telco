@@ -66,6 +66,32 @@ const MODEL_INFO = {
       { key: "criterion", label: "Criterion", type: "select", default: "gini", options: ["gini", "entropy"] },
     ],
   },
+  adaboost: {
+    label: "AdaBoost",
+    color: "#fb923c",
+    accent: "#ea580c",
+    tooltip:
+      "Adaptive Boosting: combines many weak learners (decision stumps) sequentially. Each round re-weights misclassified samples. Simple but effective.",
+    params: [
+      { key: "n_estimators", label: "N Estimators", type: "number", default: 50, min: 10, step: 10 },
+      { key: "learning_rate", label: "Learning Rate", type: "number", default: 1.0, min: 0.01, step: 0.05 },
+      { key: "algorithm", label: "Algorithm", type: "select", default: "SAMME", options: ["SAMME"] },
+    ],
+  },
+  xgboost: {
+    label: "XGBoost",
+    color: "#f43f5e",
+    accent: "#be123c",
+    tooltip:
+      "Extreme Gradient Boosting with L1/L2 regularization. Uses 2nd-order gradients for faster convergence. subsample + colsample act like dropout for trees.",
+    params: [
+      { key: "n_estimators", label: "N Rounds", type: "number", default: 100, min: 10, step: 10 },
+      { key: "learning_rate", label: "Learning Rate", type: "number", default: 0.1, min: 0.01, step: 0.01 },
+      { key: "max_depth", label: "Max Depth", type: "number", default: 6, min: 1, step: 1 },
+      { key: "subsample", label: "Subsample", type: "number", default: 0.8, min: 0.1, step: 0.05 },
+      { key: "colsample_bytree", label: "Col Sample", type: "number", default: 0.8, min: 0.1, step: 0.05 },
+    ],
+  },
 };
 
 export default MODEL_INFO;

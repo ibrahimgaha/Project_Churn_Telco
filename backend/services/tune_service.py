@@ -45,6 +45,18 @@ PARAM_GRIDS = {
         "min_samples_split": [2, 5, 10],
         "criterion":        ["gini", "entropy"],
     },
+    "adaboost": {
+        "n_estimators":  [50, 100, 200],
+        "learning_rate": [0.01, 0.1, 0.5, 1.0],
+        "algorithm":     ["SAMME"],
+    },
+    "xgboost": {
+        "n_estimators":     [50, 100, 200],
+        "learning_rate":    [0.01, 0.05, 0.1, 0.3],
+        "max_depth":        [3, 6, 10],
+        "subsample":        [0.7, 0.8, 1.0],
+        "colsample_bytree": [0.7, 0.8, 1.0],
+    },
 }
 
 

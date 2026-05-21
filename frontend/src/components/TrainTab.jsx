@@ -10,7 +10,9 @@ export default function TrainTab({ onTrainSuccess }) {
     knn: false,
     svm: false,
     decision_tree: false, 
-    random_forest: false 
+    random_forest: false,
+    adaboost: false,
+    xgboost: false,
   });
   
   const [hyperparams, setHyperparams] = useState(
@@ -52,7 +54,6 @@ export default function TrainTab({ onTrainSuccess }) {
     try {
       const res = await autoTune(modelName);
       setHyperparams(h => ({ ...h, [modelName]: res.best_params }));
-      alert(`✅ Best CV F1: ${(res.best_cv_score * 100).toFixed(2)}%\nBest params applied to config.`);
     } catch (e) { 
       setError(e.message); 
     } finally { 
@@ -61,35 +62,41 @@ export default function TrainTab({ onTrainSuccess }) {
   };
 
   return (
-    <div className="fade-in">
-      {error && <div style={S.errorBox}>⚠ {error}</div>}
+    <div className="stagger">
+      {error && <div style={S.errorBox}><span>⚠️</span> {error}</div>}
 
-      {/* Model Selection */}
-      <div style={S.section}>
-        <div style={S.sectionTitle}>Model Selection</div>
-        <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+      {/* Model Selection Grid */}
+      <div style={S.section} className="glass-card">
+        <div style={S.sectionTitle}>
+          <span style={{ color: "#6366f1" }}>⚛</span> Model Configuration
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
           {Object.entries(MODEL_INFO).map(([key, info]) => (
             <label key={key} style={{ 
               display: "flex", 
               alignItems: "center", 
-              gap: 10, 
-              padding: "12px 18px", 
-              background: selectedModels[key] ? info.color + "15" : "#0f172a", 
-              border: `2px solid ${selectedModels[key] ? info.color : "#1e293b"}`, 
-              borderRadius: 10, 
+              gap: 12, 
+              padding: "16px 20px", 
+              background: selectedModels[key] ? `${info.color}10` : "rgba(15, 23, 42, 0.4)", 
+              border: `1px solid ${selectedModels[key] ? `${info.color}44` : "rgba(255,255,255,0.05)"}`, 
+              borderRadius: 16, 
               cursor: "pointer", 
-              transition: "all 0.2s", 
-              flex: 1, 
-              minWidth: 200 
+              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              position: "relative",
+              overflow: "hidden"
             }}>
+              {selectedModels[key] && (
+                <div style={{ position: "absolute", top: 0, left: 0, width: 4, height: "100%", background: info.color }} />
+              )}
               <input 
                 type="checkbox" 
                 checked={selectedModels[key]} 
                 onChange={e => setSelectedModels(s => ({ ...s, [key]: e.target.checked }))} 
-                style={{ accentColor: info.color, width: 16, height: 16 }} 
+                style={{ accentColor: info.color, width: 18, height: 18 }} 
               />
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, color: selectedModels[key] ? info.color : "#94a3b8", fontSize: 13 }}>{info.label}</div>
+                <div style={{ fontWeight: 800, color: selectedModels[key] ? "#fff" : "#64748b", fontSize: 13, letterSpacing: -0.2 }}>{info.label}</div>
+                <div style={{ fontSize: 10, color: "#475569", marginTop: 2 }}>{selectedModels[key] ? "Config Enabled" : "Standby"}</div>
               </div>
               <Tooltip text={info.tooltip} />
             </label>
@@ -97,52 +104,111 @@ export default function TrainTab({ onTrainSuccess }) {
         </div>
       </div>
 
-      {/* Hyperparameter panels */}
-      {Object.entries(MODEL_INFO).map(([key, info]) => !selectedModels[key] ? null : (
-        <div key={key} style={{ ...S.section, borderColor: info.color + "33" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <div style={{ ...S.sectionTitle, marginBottom: 0, color: info.color }}>{info.label} — Hyperparameters</div>
-            <button onClick={() => handleTune(key)} disabled={tuning === key} style={{ ...S.btnOutline, borderColor: info.accent + "66", color: info.color, opacity: tuning === key ? 0.6 : 1 }}>
-              {tuning === key ? "⏳ Tuning..." : "⚡ Auto Tune"}
-            </button>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px,1fr))", gap: 14 }}>
-            {info.params.map(p => (
-              <div key={p.key}>
-                <label style={S.label}>{p.label}</label>
-                {p.type === "select" ? (
-                  <select 
-                    value={hyperparams[key][p.key]} 
-                    onChange={e => setHyperparams(h => ({ ...h, [key]: { ...h[key], [p.key]: e.target.value } }))} 
-                    style={{ ...S.input, appearance: "none" }}
-                  >
-                    {p.options.map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                ) : (
-                  <input 
-                    type="number" 
-                    value={hyperparams[key][p.key]} 
-                    min={p.min} 
-                    step={p.step} 
-                    onChange={e => setHyperparams(h => ({ ...h, [key]: { ...h[key], [p.key]: parseFloat(e.target.value) || p.default } }))} 
-                    style={S.input} 
-                  />
-                )}
+      {/* Parameter Panels */}
+      <div style={{ display: "grid", gap: 20 }}>
+        {Object.entries(MODEL_INFO).map(([key, info]) => !selectedModels[key] ? null : (
+          <div key={key} style={{ 
+            ...S.section, 
+            background: "rgba(15, 23, 42, 0.3)",
+            borderLeft: `4px solid ${info.color}` 
+          }} className="glass-card">
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                 <div style={{ width: 10, height: 10, borderRadius: "50%", background: info.color, boxShadow: `0 0 10px ${info.color}` }} />
+                 <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", letterSpacing: -0.5 }}>{info.label} Tuning</div>
               </div>
-            ))}
+              <button 
+                onClick={() => handleTune(key)} 
+                disabled={tuning === key} 
+                style={{ 
+                  ...S.btnOutline, 
+                  borderColor: `${info.color}44`, 
+                  color: info.color, 
+                  opacity: tuning === key ? 0.6 : 1,
+                  background: `${info.color}08`
+                }}
+              >
+                {tuning === key ? "⚡ Tuning..." : "⚡ Auto Optimize"}
+              </button>
+            </div>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 24 }}>
+              {info.params.map(p => (
+                <div key={p.key}>
+                  <label style={S.label}>{p.label}</label>
+                  {p.type === "select" ? (
+                    <div style={{ position: "relative" }}>
+                      <select 
+                        value={hyperparams[key][p.key]} 
+                        onChange={e => setHyperparams(h => ({ ...h, [key]: { ...h[key], [p.key]: e.target.value } }))} 
+                        style={{ ...S.input, appearance: "none" }}
+                      >
+                        {p.options.map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                      <div style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", fontSize: 10, color: "#475569" }}>▼</div>
+                    </div>
+                  ) : (
+                    <input 
+                      type="number" 
+                      value={hyperparams[key][p.key]} 
+                      min={p.min} 
+                      step={p.step} 
+                      onChange={e => setHyperparams(h => ({ ...h, [key]: { ...h[key], [p.key]: parseFloat(e.target.value) || p.default } }))} 
+                      style={S.input} 
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Execution Controller */}
+      <div style={{ 
+        ...S.section, 
+        display: "flex", 
+        alignItems: "center", 
+        gap: 40, 
+        flexWrap: "wrap", 
+        justifyContent: "center",
+        background: "linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(15, 23, 42, 0.4) 100%)",
+        marginTop: 20
+      }} className="glass-card">
+        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+          <div>
+            <label style={S.label}>Validation Split Ratio</label>
+            <input 
+              type="range" min="0.1" max="0.4" step="0.05" 
+              value={testSize} 
+              onChange={e => setTestSize(parseFloat(e.target.value))} 
+              style={{ accentColor: "#6366f1", width: 220, cursor: "pointer" }} 
+            />
+          </div>
+          <div style={{ 
+            background: "rgba(99, 102, 241, 0.1)", 
+            padding: "8px 16px", 
+            borderRadius: 12, 
+            color: "#818cf8", 
+            fontSize: 16, 
+            fontWeight: 900,
+            border: "1px solid rgba(99, 102, 241, 0.2)"
+          }}>
+            {(testSize * 100).toFixed(0)}%
           </div>
         </div>
-      ))}
-
-      {/* Train config */}
-      <div style={{ ...S.section, display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap", justifyContent: "center" }}>
-        <div>
-          <label style={S.label}>Test Split</label>
-          <input type="range" min="0.1" max="0.4" step="0.05" value={testSize} onChange={e => setTestSize(parseFloat(e.target.value))} style={{ accentColor: "#6ee7b7", width: 200 }} />
-          <span style={{ color: "#6ee7b7", fontSize: 13, marginLeft: 10, fontWeight: 700, fontFamily: "monospace" }}>{(testSize * 100).toFixed(0)}%</span>
-        </div>
-        <button onClick={handleTrain} disabled={loading} style={{ ...S.btn, padding: "14px 48px", fontSize: 14, opacity: loading ? 0.7 : 1, display: "flex", alignItems: "center", gap: 10, boxShadow: "0 0 20px rgba(110, 231, 183, 0.2)" }}>
-          {loading ? "⏳ Training..." : "▶ Train Selected Models"}
+        
+        <button 
+          onClick={handleTrain} 
+          disabled={loading} 
+          style={{ 
+            ...S.btn, 
+            padding: "16px 50px", 
+            fontSize: 15, 
+            opacity: loading ? 0.7 : 1,
+          }}
+        >
+          {loading ? "⚙️ Processing..." : "🚀 Launch Experiment"}
         </button>
       </div>
     </div>

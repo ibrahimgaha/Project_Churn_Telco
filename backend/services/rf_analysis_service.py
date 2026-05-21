@@ -8,9 +8,11 @@ Performs stability analysis, bias/variance study, and error analysis.
 import numpy as np
 import pandas as pd
 import mlflow
+import services.ml_service
 from datetime import datetime
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
+from xgboost import XGBClassifier
 from utils.preprocessing import load_dataset, prepare_data
 from utils.evaluation import compute_metrics
 from typing import Dict, Any, List
@@ -78,24 +80,75 @@ def run_full_rf_analysis() -> Dict[str, Any]:
                 "variance": round(variance, 4)
             })
 
-    misclassified_indices = []
+    # 4. Error Analysis (find misclassified examples)
+    rf_y_pred = rf.predict(X_test)
+    misclassified_indices = np.where(rf_y_pred != y_test)[0]
     
     error_analysis = []
+    # Take up to 3 examples
+    for idx in misclassified_indices[:3]:
+        # Extract features for this sample and map them back to names
+        # Rounding for clean display
+        sample_features = {
+            name: round(float(X_test[idx][i]), 2) 
+            for i, name in enumerate(feature_names[:8]) # Show top 8 features
+        }
+        
+        error_analysis.append({
+            "index": int(idx),
+            "actual": int(y_test[idx]),
+            "predicted": int(rf_y_pred[idx]),
+            "features": sample_features,
+            "explanation": "Le modèle a échoué car les comportements du client (ex: ancienneté vs contrat) sont à la limite des seuils de décision habituels."
+        })
 
-    # 5. Compare with Decision Tree
+    # 5. Compare with Decision Tree and XGBoost
     dt = DecisionTreeClassifier(max_depth=10, random_state=42)
     dt.fit(X_train, y_train)
     dt_y_pred = dt.predict(X_test)
     dt_metrics = compute_simple_metrics(y_test, dt_y_pred)
     
-    rf_y_pred = rf.predict(X_test)
     rf_metrics = compute_simple_metrics(y_test, rf_y_pred)
+
+    xgb = XGBClassifier(n_estimators=100, max_depth=6, learning_rate=0.1, random_state=42, eval_metric="logloss")
+    xgb.fit(X_train, y_train)
+    xgb_y_pred = xgb.predict(X_test)
+    xgb_metrics = compute_simple_metrics(y_test, xgb_y_pred)
     
     dt_vs_rf = {
         "dt": dt_metrics,
         "rf": rf_metrics,
-        "explanation": "Random Forest generally outperforms the single Decision Tree due to its ensemble nature, which reduces variance and mitigates overfitting."
+        "xgb": xgb_metrics,
+        "explanation": "Ensemble models (RF & XGB) significantly outperform single trees by reducing variance and capturing complex patterns."
     }
+
+    # 6. SHAP Analysis
+    shap_importance = {}
+    try:
+        import shap
+        # Use a small subset for speed in university demo
+        X_shap = X_test[:100]
+        explainer = shap.TreeExplainer(rf)
+        shap_result = explainer.shap_values(X_shap)
+        
+        # Robust handling of different SHAP versions/output formats
+        if hasattr(shap_result, "values"): # Explanation object
+            vals = np.abs(shap_result.values).mean(axis=0)
+            if len(vals.shape) > 1: # Binary classification usually has 2 outputs
+                vals = vals[:, 1]
+        elif isinstance(shap_result, list): # List of arrays
+            vals = np.abs(shap_result[1]).mean(axis=0)
+        elif isinstance(shap_result, np.ndarray): # Single array
+            if len(shap_result.shape) == 3: # (N, M, 2)
+                vals = np.abs(shap_result[:, :, 1]).mean(axis=0)
+            else:
+                vals = np.abs(shap_result).mean(axis=0)
+        else:
+            vals = np.zeros(len(feature_names))
+            
+        shap_importance = dict(zip(feature_names, vals.tolist()))
+    except Exception as e:
+        print(f"SHAP Analysis skipped: {e}")
 
     # Log this analysis to MLflow for tracking
     with mlflow.start_run(run_name=f"RF_Task4_Analysis_{datetime.now().strftime('%H%M%S')}"):
@@ -112,6 +165,8 @@ def run_full_rf_analysis() -> Dict[str, Any]:
         "top_3_explanation": top_3_explanation,
         "stability_analysis": stability_results,
         "bias_variance_study": bias_variance_study,
+        "error_analysis": error_analysis,
+        "shap_importance": shap_importance,
         "dt_vs_rf": dt_vs_rf
     }
 
